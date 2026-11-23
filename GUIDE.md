@@ -56,7 +56,7 @@ Claude Code only makes a pull request when you ask. So first, tell Claude Code:
 
 > Please open a pull request for this work.
 
-It will give you a link. Tap the link.
+It will give you a link. Tap the link. It opens in your browser, so sign in to GitHub there if it asks.
 
 *Another way:* Go to `https://github.com/andy80218/DailyPlanner` in Safari. A yellow banner may say "Compare & pull request." Tap it, then tap **Create pull request**.
 
@@ -116,7 +116,7 @@ Open it. You should see the planner. If you see "404," wait another minute and t
 
 ## Part 4: Make a change by asking Claude Code  [Any device]
 
-1. Open Claude Code (on the web at `claude.ai/code`, or in the Claude app) and pick the **DailyPlanner** repository.
+1. **[iPad]** Open the **Claude app** and go to its **Code** area. (On a computer, use `claude.ai/code`.) Pick the **DailyPlanner** repository, and start a new chat or open the old one.
 2. Write what you want in plain words. Good requests are small and clear:
    - "Add a 'Water' habit by default."
    - "Make the priority boxes bigger."
