@@ -6,7 +6,7 @@ It has five parts:
 
 1. **To-do list.** Add things to do. Check them off. Delete them.
 2. **Three priorities.** The three most important things for each day.
-3. **Habit tracker.** Add habits like "walk 20 minutes." Check them off each day. The app counts your **streak**. A streak is how many days in a row you did the habit.
+3. **Habit tracker.** One tap adds seven starter habits you can rename or remove. Add habits like "walk 20 minutes." Check them off each day. The app counts your **streak**. A streak is how many days in a row you did the habit.
 4. **Thought to ponder.** One short quote or question each day. It stays the same all day and changes at midnight.
 5. **Notes.** A big box for anything you want to remember.
 
@@ -15,7 +15,7 @@ Everything saves by itself. You never press "Save."
 ## How to open it
 
 **Option 1: on the internet (best for the iPad).**
-Open this address in Safari:
+Open this address in Chrome or Safari:
 
 <https://andy80218.github.io/DailyPlanner/>
 
@@ -26,8 +26,8 @@ Download or clone this project. Then double-click the file `index.html`. It open
 
 ### Put it on the iPad Home Screen
 
-1. Open the address above in **Safari**.
-2. Tap the **Share** button (a square with an arrow pointing up).
+1. Open the address above in **Chrome** or **Safari**.
+2. Tap the **Share** button (an arrow pointing up).
 3. Tap **Add to Home Screen**, then **Add**.
 
 Now it has an icon, like a normal app.
@@ -39,7 +39,7 @@ Your data is stored **inside your browser, on your device**. The technical name 
 What this means for you:
 
 - Your data is **not** on GitHub. Nobody else can see it.
-- The iPad and your computer each have their **own separate** copy. They do not share.
+- The iPad and your computer each have their **own separate** copy. They do not share. On the iPad, Chrome, Safari and the Home Screen icon also keep separate copies.
 - Safari on the iPad may delete a website's stored data if you do not visit it for about a week. This applies mostly to tabs, not to apps added to the Home Screen. Do not count on it staying.
 - **Private Browsing** mode forgets everything when you close it. The app shows a yellow warning if it cannot save.
 - If you clear Safari's website data, your planner is erased.

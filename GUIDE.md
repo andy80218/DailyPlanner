@@ -56,7 +56,7 @@ Claude Code only makes a pull request when you ask. So first, tell Claude Code:
 
 > Please open a pull request for this work.
 
-It will give you a link. Tap the link.
+It will give you a link. Tap the link. It opens in your browser, so sign in to GitHub there if it asks.
 
 *Another way:* Go to `https://github.com/andy80218/DailyPlanner` in Safari. A yellow banner may say "Compare & pull request." Tap it, then tap **Create pull request**.
 
@@ -87,12 +87,12 @@ If a button looks different, do not worry. GitHub changes its buttons sometimes.
 
 ---
 
-## Part 3: Turn on GitHub Pages  [Any device; Safari is the most reliable]
+## Part 3: Turn on GitHub Pages  [Any device; a browser works better than the GitHub app]
 
-The GitHub app may not show this setting. Use **Safari**.
+The GitHub app may not show this setting. Use a browser (**Chrome** or **Safari**).
 
 1. Go to `https://github.com/andy80218/DailyPlanner`.
-2. Tap **Settings** (a tab near the top; scroll the tab bar sideways if you cannot see it). On the iPad, if the page looks squished, tap the **aA** button in Safari's address bar and choose **Request Desktop Website**.
+2. Tap **Settings** (a tab near the top; scroll the tab bar sideways if you cannot see it). On the iPad, if the page looks squished, ask for the desktop version. In **Chrome**, tap the **⋯** menu, then **Request Desktop Site**. In **Safari**, tap the **aA** button in the address bar, then **Request Desktop Website**.
 3. In the left list, tap **Pages**.
 4. Under **Build and deployment**, find **Source**. Choose **Deploy from a branch**.
 5. Under **Branch**, choose **main**. In the box next to it, choose **/ (root)**.
@@ -108,15 +108,15 @@ Open it. You should see the planner. If you see "404," wait another minute and t
 *Important:* the pull request must be **merged first** (Part 2). Pages shows the **main** branch.
 
 ### Put it on your Home Screen  [iPad]
-1. Open the address in **Safari**.
-2. Tap **Share** (the square with an up arrow).
+1. Open the address in **Chrome** or **Safari**.
+2. Tap **Share** (the arrow-up icon). In Chrome it is in the address bar. In Safari it is a square with an up arrow.
 3. Tap **Add to Home Screen**, then **Add**.
 
 ---
 
 ## Part 4: Make a change by asking Claude Code  [Any device]
 
-1. Open Claude Code (on the web at `claude.ai/code`, or in the Claude app) and pick the **DailyPlanner** repository.
+1. **[iPad]** Open the **Claude app** and go to its **Code** area. (On a computer, use `claude.ai/code`.) Pick the **DailyPlanner** repository, and start a new chat or open the old one.
 2. Write what you want in plain words. Good requests are small and clear:
    - "Add a 'Water' habit by default."
    - "Make the priority boxes bigger."
@@ -124,7 +124,7 @@ Open it. You should see the planner. If you see "404," wait another minute and t
 3. Claude Code makes the change on a branch and makes a commit.
 4. Ask: **"Please open a pull request."**
 5. Do Part 2 again to review and merge it.
-6. Wait a minute or two. Reload the planner in Safari. Pull down to refresh. If you still see the old version, close the tab and open it again.
+6. Wait a minute or two. Reload the planner in your browser. Pull down to refresh. If you still see the old version, close the tab and open it again.
 
 **Tips**
 - One small change at a time is easier to check than ten.
