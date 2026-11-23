@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Daily Planner tests</title>
+  <meta name="color-scheme" content="light dark">
+  <style>
+    :root { --bg:#f6f5f1; --text:#1d1d1f; --pass:#146c2e; --pass-bg:#e3f4e8; --fail:#a4262c; --fail-bg:#fbe4e5; --line:#d6d4cc; }
+    @media (prefers-color-scheme: dark) { :root { --bg:#121214; --text:#f2f2f4; --pass:#7fd49a; --pass-bg:#16301f; --fail:#ff9aa0; --fail-bg:#40191c; --line:#3a3a41; } }
+    body { font: 16px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); max-width: 760px; margin: 0 auto; padding: 16px; }
+    h1 { margin: 0 0 4px; }
+    #summary { font-size: 1.2rem; font-weight: 700; padding: 12px 14px; border-radius: 10px; margin: 12px 0; }
+    #summary.pass { background: var(--pass-bg); color: var(--pass); }
+    #summary.fail { background: var(--fail-bg); color: var(--fail); }
+    h2 { font-size: 1.05rem; margin: 20px 0 6px; }
+    ul { list-style: none; margin: 0; padding: 0; }
+    li { padding: 8px 12px; border-left: 6px solid var(--line); margin: 4px 0; border-radius: 6px; }
+    li.pass { border-color: var(--pass); background: var(--pass-bg); }
+    li.fail { border-color: var(--fail); background: var(--fail-bg); }
+    .mark { font-weight: 700; margin-right: 6px; }
+    .msg { display: block; font-size: 0.9rem; opacity: 0.9; }
+  </style>
+</head>
+<body>
+  <h1>Daily Planner tests</h1>
+  <p>These checks run by themselves. Green means pass. Red means something is broken. They use made-up sample data only and never touch your real planner data.</p>
+  <div id="summary" role="status">Running&hellip;</div>
+  <div id="results"></div>
+
+  <!-- This page has no data-app attribute, so app.js loads only its logic. -->
+  <script src="app.js"></script>
+  <script>
+  (function () {
+    var P = window.Planner;
+    var groups = [], current = null, passed = 0, failed = 0;
+
+    function group(name) { current = { name: name, items: [] }; groups.push(current); }
+    function test(name, fn) {
+      try { fn(); current.items.push({ name: name, ok: true }); passed++; }
+      catch (e) { current.items.push({ name: name, ok: false, msg: e && e.message ? e.message : String(e) }); failed++; }
+    }
+    function eq(actual, expected, label) {
+      var a = JSON.stringify(actual), b = JSON.stringify(expected);
+      if (a !== b) { throw new Error((label ? label + ': ' : '') + 'expected ' + b + ' but got ' + a); }
+    }
+    function ok(cond, label) { if (!cond) { throw new Error(label || 'condition was false'); } }
+
+    // A pretend localStorage, so tests never touch the real one.
+    function fakeStorage(opts) {
+      opts = opts || {};
+      var data = {};
+      return {
+        data: data,
+        getItem: function (k) { return Object.prototype.hasOwnProperty.call(data, k) ? data[k] : null; },
+        setItem: function (k, v) { if (opts.throws) { throw new Error('blocked'); } data[k] = String(v); },
+        removeItem: function (k) { delete data[k]; }
+      };
+    }
+    function sample() {
+      var s = P.emptyState();
+      P.addTodo(s, 'Sample task');
+      var h = P.addHabit(s, 'Sample habit');
+      P.setHabitDone(s, h.id, '2026-01-02', true);
+      P.setPriorityText(s, '2026-01-02', 0, 'Sample priority');
+      s.notes = 'Sample note';
+      return s;
+    }
+
+    /* ---------- Dates and rollover ---------- */
+    group('Dates and midnight rollover');
+    test('date key uses local time, format YYYY-MM-DD', function () {
+      eq(P.todayKey(new Date(2026, 0, 5, 9, 30)), '2026-01-05');
+    });
+    test('23:59:59 is still the old day', function () {
+      eq(P.todayKey(new Date(2026, 5, 30, 23, 59, 59)), '2026-06-30');
+    });
+    test('00:00:00 is the new day (rollover)', function () {
+      eq(P.todayKey(new Date(2026, 6, 1, 0, 0, 0)), '2026-07-01');
+    });
+    test('rolls over across a year end', function () {
+      eq(P.todayKey(new Date(2027, 0, 1, 0, 0, 1)), '2027-01-01');
+      eq(P.addDays('2026-12-31', 1), '2027-01-01');
+    });
+    test('leap day handled', function () {
+      eq(P.addDays('2028-02-28', 1), '2028-02-29');
+      eq(P.addDays('2027-02-28', 1), '2027-03-01');
+    });
+    test('addDays works backwards', function () {
+      eq(P.addDays('2026-03-01', -1), '2026-02-28');
+    });
+    test('addDays is safe across daylight saving changes', function () {
+      eq(P.addDays('2026-03-08', 1), '2026-03-09');
+      eq(P.addDays('2026-11-01', 1), '2026-11-02');
+      eq(P.addDays('2026-03-07', 3), '2026-03-10');
+    });
+    test('isValidDateKey accepts real dates only', function () {
+      ok(P.isValidDateKey('2026-02-28'));
+      ok(!P.isValidDateKey('2026-02-30'), 'Feb 30');
+      ok(!P.isValidDateKey('2026-2-3'), 'no zero padding');
+      ok(!P.isValidDateKey('__proto__'), '__proto__');
+      ok(!P.isValidDateKey(20260101), 'a number');
+      ok(!P.isValidDateKey(null), 'null');
+    });
+    test('daily items do not leak to another day', function () {
+      var s = P.emptyState();
+      P.setPriorityText(s, '2026-01-01', 0, 'Only on Jan 1');
+      eq(P.getPriorities(s, '2026-01-01')[0].text, 'Only on Jan 1');
+      eq(P.getPriorities(s, '2026-01-02')[0].text, '');
+    });
+    test('to-dos and notes are not tied to a day', function () {
+      var s = P.emptyState();
+      P.addTodo(s, 'Carry over'); s.notes = 'Keep me';
+      // Nothing about a date is stored on them, so they appear every day.
+      ok(!('date' in s.todos[0]), 'todo has no date');
+      eq(s.notes, 'Keep me');
+    });
+
+    /* ---------- Thoughts ---------- */
+    group('Thought to ponder');
+    test('at least 60 thoughts, all non-empty and unique', function () {
+      ok(P.THOUGHTS.length >= 60, 'only ' + P.THOUGHTS.length);
+      var seen = {};
+      P.THOUGHTS.forEach(function (t) {
+        ok(typeof t === 'string' && t.length > 10, 'empty thought');
+        ok(!seen[t], 'duplicate: ' + t); seen[t] = true;
+      });
+    });
+    test('the same date always gives the same thought', function () {
+      eq(P.thoughtFor('2026-05-05'), P.thoughtFor('2026-05-05'));
+    });
+    test('thought does not change during the day', function () {
+      var morning = P.thoughtFor(P.todayKey(new Date(2026, 4, 5, 6, 0)));
+      var night = P.thoughtFor(P.todayKey(new Date(2026, 4, 5, 23, 59)));
+      eq(morning, night);
+    });
+    test('next day gives a different thought', function () {
+      ok(P.thoughtFor('2026-05-05') !== P.thoughtFor('2026-05-06'));
+    });
+    test('every thought gets a turn within one cycle', function () {
+      var seen = {}, d = '2026-01-01', n;
+      for (n = 0; n < P.THOUGHTS.length; n++) { seen[P.thoughtFor(d)] = true; d = P.addDays(d, 1); }
+      eq(Object.keys(seen).length, P.THOUGHTS.length);
+    });
+    test('dates before 1970 still work', function () {
+      ok(typeof P.thoughtFor('1960-06-15') === 'string' && P.thoughtFor('1960-06-15').length > 0);
+    });
+
+    /* ---------- To-dos, priorities, habits ---------- */
+    group('To-dos, priorities and habits');
+    test('add, check off and delete a to-do', function () {
+      var s = P.emptyState();
+      var t = P.addTodo(s, '  Buy   sample milk ');
+      eq(t.text, 'Buy sample milk', 'whitespace tidied');
+      eq(s.todos.length, 1);
+      P.toggleTodo(s, t.id); ok(s.todos[0].done, 'checked');
+      P.toggleTodo(s, t.id); ok(!s.todos[0].done, 'unchecked');
+      P.deleteTodo(s, t.id); eq(s.todos.length, 0);
+    });
+    test('empty to-do text is refused', function () {
+      var s = P.emptyState();
+      eq(P.addTodo(s, '   '), null); eq(s.todos.length, 0);
+    });
+    test('clear finished to-dos keeps unfinished ones', function () {
+      var s = P.emptyState();
+      var a = P.addTodo(s, 'A'); P.addTodo(s, 'B'); P.toggleTodo(s, a.id);
+      eq(P.clearDoneTodos(s), 1); eq(s.todos.map(function (t) { return t.text; }), ['B']);
+    });
+    test('three priorities per day, with done flags', function () {
+      var s = P.emptyState();
+      eq(P.getPriorities(s, '2026-01-01').length, 3);
+      P.setPriorityText(s, '2026-01-01', 2, 'Third'); P.setPriorityDone(s, '2026-01-01', 2, true);
+      var p = P.getPriorities(s, '2026-01-01');
+      eq(p[2], { text: 'Third', done: true });
+      ok(!P.setPriorityText(s, '2026-01-01', 3, 'x'), 'index 3 refused');
+    });
+    test('emptied priorities leave nothing behind', function () {
+      var s = P.emptyState();
+      P.setPriorityText(s, '2026-01-01', 0, 'x'); P.setPriorityText(s, '2026-01-01', 0, '');
+      eq(Object.keys(s.priorities).length, 0);
+    });
+    test('adding and removing a habit; removal also clears its check marks', function () {
+      var s = P.emptyState();
+      var h = P.addHabit(s, 'Sample habit');
+      P.setHabitDone(s, h.id, '2026-01-01', true);
+      ok(P.isHabitDone(s, h.id, '2026-01-01'));
+      P.removeHabit(s, h.id);
+      eq(s.habits.length, 0); eq(Object.keys(s.habitLog).length, 0);
+    });
+    test('habit check marks are per day', function () {
+      var s = P.emptyState(); var h = P.addHabit(s, 'H');
+      P.setHabitDone(s, h.id, '2026-01-01', true);
+      ok(P.isHabitDone(s, h.id, '2026-01-01')); ok(!P.isHabitDone(s, h.id, '2026-01-02'));
+      P.setHabitDone(s, h.id, '2026-01-01', false); ok(!P.isHabitDone(s, h.id, '2026-01-01'));
+    });
+
+    /* ---------- Streaks ---------- */
+    group('Habit streaks');
+    function streakWith(days, today) {
+      var s = P.emptyState(); var h = P.addHabit(s, 'H');
+      days.forEach(function (d) { P.setHabitDone(s, h.id, d, true); });
+      return P.currentStreak(s, h.id, today);
+    }
+    test('no check marks = streak 0', function () { eq(streakWith([], '2026-03-10'), 0); });
+    test('only today = 1', function () { eq(streakWith(['2026-03-10'], '2026-03-10'), 1); });
+    test('three days in a row ending today = 3', function () {
+      eq(streakWith(['2026-03-08', '2026-03-09', '2026-03-10'], '2026-03-10'), 3);
+    });
+    test('today not done yet: streak stays alive from yesterday', function () {
+      eq(streakWith(['2026-03-08', '2026-03-09'], '2026-03-10'), 2);
+    });
+    test('a missed day breaks the streak', function () {
+      eq(streakWith(['2026-03-07', '2026-03-08', '2026-03-10'], '2026-03-10'), 1);
+      eq(streakWith(['2026-03-05', '2026-03-06'], '2026-03-10'), 0);
+    });
+    test('streak crosses month and year boundaries', function () {
+      eq(streakWith(['2026-12-30', '2026-12-31', '2027-01-01', '2027-01-02'], '2027-01-02'), 4);
+    });
+    test('future check marks do not inflate the streak', function () {
+      eq(streakWith(['2026-03-10', '2026-03-11', '2026-03-12'], '2026-03-10'), 1);
+    });
+    test('habits keep separate streaks', function () {
+      var s = P.emptyState(); var a = P.addHabit(s, 'A'); var b = P.addHabit(s, 'B');
+      P.setHabitDone(s, a.id, '2026-03-10', true); P.setHabitDone(s, a.id, '2026-03-09', true);
+      P.setHabitDone(s, b.id, '2026-03-10', true);
+      eq(P.currentStreak(s, a.id, '2026-03-10'), 2); eq(P.currentStreak(s, b.id, '2026-03-10'), 1);
+    });
+    test('streak after midnight rollover keeps counting', function () {
+      var s = P.emptyState(); var h = P.addHabit(s, 'H');
+      P.setHabitDone(s, h.id, '2026-03-09', true); P.setHabitDone(s, h.id, '2026-03-10', true);
+      eq(P.currentStreak(s, h.id, P.todayKey(new Date(2026, 2, 10, 23, 59))), 2);
+      eq(P.currentStreak(s, h.id, P.todayKey(new Date(2026, 2, 11, 0, 0))), 2, 'alive until the new day ends');
+      eq(P.currentStreak(s, h.id, P.todayKey(new Date(2026, 2, 12, 0, 0))), 0, 'broken after a missed day');
+    });
+
+    /* ---------- Storage ---------- */
+    group('Saving and loading (storage)');
+    test('uses one namespaced key', function () {
+      var fs = fakeStorage(); var store = P.createStore(fs);
+      store.save(sample());
+      eq(Object.keys(fs.data), [P.STORAGE_KEY]); eq(P.STORAGE_KEY, 'dailyPlanner.v1');
+    });
+    test('save then load gives back the same data', function () {
+      var fs = fakeStorage(); var s = sample();
+      P.createStore(fs).save(s);
+      eq(P.createStore(fs).load(), s);
+    });
+    test('first run (nothing saved) gives empty state', function () {
+      eq(P.createStore(fakeStorage()).load(), P.emptyState());
+    });
+    test('blocked storage: reported unavailable, app keeps working', function () {
+      var store = P.createStore(fakeStorage({ throws: true }));
+      ok(!store.available, 'available should be false');
+      eq(store.save(sample()), false);
+      ok(store.saveProblem, 'saveProblem set');
+      eq(store.load().notes, 'Sample note', 'kept in memory for this visit');
+    });
+    test('missing storage (null) is handled', function () {
+      var store = P.createStore(null); ok(!store.available); eq(store.load(), P.emptyState());
+    });
+    test('corrupt saved text: starts empty, keeps a copy, tells the user', function () {
+      var fs = fakeStorage(); fs.data[P.STORAGE_KEY] = '{ not json';
+      var store = P.createStore(fs);
+      eq(store.load(), P.emptyState()); ok(store.loadProblem, 'loadProblem set');
+      eq(fs.data[P.STORAGE_KEY + '.unreadable'], '{ not json');
+    });
+    test('a failing save (storage full) is reported', function () {
+      var fs = fakeStorage(); var store = P.createStore(fs);
+      fs.setItem = function () { throw new Error('quota'); };
+      eq(store.save(sample()), false); ok(store.saveProblem);
+    });
+
+    /* ---------- Import / export ---------- */
+    group('Import and export validation');
+    function exported(mutate) {
+      var env = P.buildExport(sample(), new Date(2026, 0, 2, 12, 0, 0));
+      if (mutate) { mutate(env); }
+      return JSON.stringify(env);
+    }
+    test('export then import round-trips', function () {
+      var r = P.validateImport(exported());
+      ok(r.ok, r.error);
+      eq(r.state.todos.length, 1); eq(r.state.habits.length, 1); eq(r.state.notes, 'Sample note');
+      eq(P.getPriorities(r.state, '2026-01-02')[0].text, 'Sample priority');
+      ok(P.isHabitDone(r.state, r.state.habits[0].id, '2026-01-02'));
+    });
+    test('export says what it is', function () {
+      var env = P.buildExport(P.emptyState());
+      eq(env.app, 'dailyPlanner'); eq(env.version, 1); ok(typeof env.exportedAt === 'string');
+    });
+    test('rejects text that is not JSON', function () { ok(!P.validateImport('hello').ok); });
+    test('rejects JSON that is not an object', function () {
+      ok(!P.validateImport('[1,2,3]').ok); ok(!P.validateImport('null').ok); ok(!P.validateImport('"x"').ok);
+    });
+    test('rejects a file from another app', function () {
+      ok(!P.validateImport(exported(function (e) { e.app = 'somethingElse'; })).ok);
+      ok(!P.validateImport('{"todos":[]}').ok);
+    });
+    test('rejects missing, wrong or newer versions', function () {
+      ok(!P.validateImport(exported(function (e) { delete e.version; })).ok, 'missing');
+      ok(!P.validateImport(exported(function (e) { e.version = '1'; })).ok, 'text version');
+      ok(!P.validateImport(exported(function (e) { e.version = 99; })).ok, 'newer');
+    });
+    test('rejects wrongly shaped fields', function () {
+      ok(!P.validateImport(exported(function (e) { e.data.todos = 'nope'; })).ok, 'todos');
+      ok(!P.validateImport(exported(function (e) { e.data.todos = [{ text: 5, done: false }]; })).ok, 'todo text');
+      ok(!P.validateImport(exported(function (e) { e.data.todos = [{ text: 'a', done: 'yes' }]; })).ok, 'todo done');
+      ok(!P.validateImport(exported(function (e) { e.data.habits = [{ name: 'x' }]; })).ok, 'habit id');
+      ok(!P.validateImport(exported(function (e) { e.data.notes = 12; })).ok, 'notes');
+      ok(!P.validateImport(exported(function (e) { e.data.priorities = []; })).ok, 'priorities');
+      ok(!P.validateImport(exported(function (e) { e.data = 'x'; })).ok, 'data');
+    });
+    test('rejects duplicate habit ids', function () {
+      ok(!P.validateImport(exported(function (e) {
+        e.data.habits = [{ id: 'a', name: 'A' }, { id: 'a', name: 'B' }];
+      })).ok);
+    });
+    test('drops entries keyed by fake dates; never pollutes prototypes', function () {
+      var text = '{"app":"dailyPlanner","version":1,"data":{"priorities":{"__proto__":[{"text":"x","done":true},{},{}],"2026-13-45":[{"text":"x"}],"2026-01-03":[{"text":"ok"},{},{}]},"habitLog":{"__proto__":["a"],"constructor":["a"]}}}';
+      var r = P.validateImport(text);
+      ok(r.ok, r.error);
+      eq(Object.keys(r.state.priorities), ['2026-01-03']);
+      eq(Object.keys(r.state.habitLog).length, 0);
+      ok(({}).done === undefined, 'Object.prototype untouched');
+    });
+    test('habit marks for unknown habits are dropped', function () {
+      var r = P.validateImport(exported(function (e) { e.data.habitLog['2026-01-05'] = ['ghost']; }));
+      ok(r.ok); ok(!r.state.habitLog['2026-01-05']);
+    });
+    test('very long text is trimmed', function () {
+      var r = P.validateImport(exported(function (e) { e.data.todos[0].text = new Array(2001).join('a'); }));
+      ok(r.ok); eq(r.state.todos[0].text.length, 500);
+    });
+    test('missing optional parts become empty', function () {
+      var r = P.validateImport('{"app":"dailyPlanner","version":1,"data":{}}');
+      ok(r.ok); eq(r.state, P.emptyState());
+    });
+    test('import then save then load works end to end', function () {
+      var r = P.validateImport(exported()); var fs = fakeStorage();
+      P.createStore(fs).save(r.state);
+      eq(P.createStore(fs).load().notes, 'Sample note');
+    });
+
+    /* ---------- Show results ---------- */
+    var out = document.getElementById('results');
+    groups.forEach(function (g) {
+      var h = document.createElement('h2'); h.textContent = g.name; out.appendChild(h);
+      var ul = document.createElement('ul');
+      g.items.forEach(function (it) {
+        var li = document.createElement('li'); li.className = it.ok ? 'pass' : 'fail';
+        var mark = document.createElement('span'); mark.className = 'mark'; mark.textContent = it.ok ? 'PASS' : 'FAIL';
+        li.appendChild(mark); li.appendChild(document.createTextNode(it.name));
+        if (!it.ok) { var m = document.createElement('span'); m.className = 'msg'; m.textContent = it.msg; li.appendChild(m); }
+        ul.appendChild(li);
+      });
+      out.appendChild(ul);
+    });
+    var sum = document.getElementById('summary');
+    sum.className = failed ? 'fail' : 'pass';
+    sum.textContent = failed ? failed + ' failed, ' + passed + ' passed' : 'All ' + passed + ' checks passed';
+    document.title = (failed ? 'FAIL' : 'PASS') + ' - Daily Planner tests';
+  })();
+  </script>
+</body>
+</html>
