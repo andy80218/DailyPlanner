@@ -1,0 +1,14 @@
+{
+  "name": "Daily Planner",
+  "short_name": "Planner",
+  "description": "A personal daily planner: to-dos, three priorities, habits, a thought of the day, and notes.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f5f1",
+  "theme_color": "#1f5fbf",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
