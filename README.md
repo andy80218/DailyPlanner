@@ -6,7 +6,7 @@ It has five parts:
 
 1. **To-do list.** Add things to do. Check them off. Delete them.
 2. **Three priorities.** The three most important things for each day.
-3. **Habit tracker.** One tap adds seven starter habits you can rename or remove. Add habits like "walk 20 minutes." Check them off each day. The app counts your **streak**. A streak is how many days in a row you did the habit.
+3. **Habit tracker.** One tap adds seven starter habits, one for each Healthspan-360 area. A button can also suggest three priorities a day from those areas. Add habits like "walk 20 minutes." Check them off each day. The app counts your **streak**. A streak is how many days in a row you did the habit.
 4. **Thought to ponder.** One short quote or question each day. It stays the same all day and changes at midnight.
 5. **Notes.** A big box for anything you want to remember.
 
