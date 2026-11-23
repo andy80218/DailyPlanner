@@ -125,7 +125,7 @@ main { max-width: 760px; margin: 0 auto; padding: 8px 16px 24px; display: grid; 
 .box {
   flex: none; width: 28px; height: 28px; border: 2px solid var(--muted);
   border-radius: 8px; background: var(--surface); position: relative;
-  margin: 0 auto;
+  pointer-events: none;
 }
 .check input:checked + .box { background: var(--accent); border-color: var(--accent); }
 .check input:checked + .box::after {
@@ -133,7 +133,7 @@ main { max-width: 760px; margin: 0 auto; padding: 8px 16px 24px; display: grid; 
   border: solid var(--accent-text); border-width: 0 3px 3px 0; transform: rotate(45deg);
 }
 .check input:focus-visible + .box { outline: 3px solid var(--accent); outline-offset: 3px; }
-.label-text { overflow-wrap: anywhere; }
+.label-text { overflow-wrap: anywhere; pointer-events: none; }
 .is-done { text-decoration: line-through; color: var(--muted); }
 
 /* Form controls */
