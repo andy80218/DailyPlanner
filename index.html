@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Daily Planner</title>
+  <meta name="description" content="A personal daily planner: to-dos, three priorities, habits, a thought of the day, and notes.">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f6f5f1" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121214" media="(prefers-color-scheme: dark)">
+
+  <!-- Add to Home Screen (iPad / iPhone) -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Planner">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-app="planner">
+  <a class="skip-link" href="#main">Skip to planner</a>
+
+  <div id="warning" class="warning" role="alert" hidden></div>
+
+  <header class="top">
+    <h1>Daily Planner</h1>
+    <nav class="date-bar" aria-label="Choose a day">
+      <button type="button" id="btn-prev" class="btn" aria-label="Previous day">&#8592;</button>
+      <div class="date-main">
+        <p id="date-title" class="date-title" aria-live="polite"></p>
+        <p><span id="date-tag" class="date-tag"></span></p>
+      </div>
+      <button type="button" id="btn-next" class="btn" aria-label="Next day">&#8594;</button>
+      <label class="date-pick">
+        <span class="sr-only">Jump to date</span>
+        <input type="date" id="date-picker">
+      </label>
+      <button type="button" id="btn-today" class="btn btn-text">Today</button>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="card thought" aria-labelledby="h-thought">
+      <h2 id="h-thought">Thought to ponder</h2>
+      <p id="thought-text" class="thought-text"></p>
+    </section>
+
+    <section class="card" aria-labelledby="h-prio">
+      <h2 id="h-prio">Today&rsquo;s three priorities</h2>
+      <p class="hint">The three things that would make this day a success.</p>
+      <ol id="priority-list" class="list"></ol>
+    </section>
+
+    <section class="card" aria-labelledby="h-habits">
+      <h2 id="h-habits">Habits</h2>
+      <p class="hint">Check a habit for the day shown above. The streak counts days in a row up to today.</p>
+      <ul id="habit-list" class="list"></ul>
+      <p id="habit-empty" class="empty">No habits yet. Add one below.</p>
+      <form id="habit-form" class="add-form">
+        <label class="sr-only" for="habit-input">New habit</label>
+        <input type="text" id="habit-input" maxlength="80" placeholder="New habit, e.g. Walk 20 minutes" autocomplete="off">
+        <button type="submit" class="btn btn-primary">Add</button>
+      </form>
+    </section>
+
+    <section class="card" aria-labelledby="h-todo">
+      <div class="card-head">
+        <h2 id="h-todo">To-do list</h2>
+        <span id="todo-count" class="count"></span>
+      </div>
+      <form id="todo-form" class="add-form">
+        <label class="sr-only" for="todo-input">New to-do</label>
+        <input type="text" id="todo-input" maxlength="500" placeholder="Add a to-do" autocomplete="off">
+        <button type="submit" class="btn btn-primary">Add</button>
+      </form>
+      <ul id="todo-list" class="list"></ul>
+      <p id="todo-empty" class="empty">Nothing to do. Enjoy it, or add something above.</p>
+      <button type="button" id="btn-clear-done" class="btn btn-text" hidden>Clear finished to-dos</button>
+    </section>
+
+    <section class="card" aria-labelledby="h-notes">
+      <h2 id="h-notes">Notes</h2>
+      <label class="sr-only" for="notes">Notes</label>
+      <textarea id="notes" rows="8" placeholder="Anything you want to remember&hellip;"></textarea>
+    </section>
+
+    <section class="card" aria-labelledby="h-data">
+      <h2 id="h-data">Back up your data</h2>
+      <p class="hint">Your planner is saved only in this browser on this device. Export a backup file now and then. Import brings a backup back.</p>
+      <div class="btn-row">
+        <button type="button" id="btn-export" class="btn btn-primary">Export backup</button>
+        <button type="button" id="btn-import" class="btn">Import backup</button>
+        <input type="file" id="import-file" accept="application/json,.json" hidden>
+      </div>
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <footer class="foot"><p>Saved automatically on this device.</p></footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
