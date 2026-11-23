@@ -194,6 +194,16 @@
       P.setHabitDone(s, h.id, '2026-01-01', false); ok(!P.isHabitDone(s, h.id, '2026-01-01'));
     });
 
+    test('starter habits: adds seven once, never duplicates', function () {
+      var s = P.emptyState();
+      eq(P.addStarterHabits(s), 7); eq(s.habits.length, 7);
+      eq(P.addStarterHabits(s), 0); eq(s.habits.length, 7);
+    });
+    test('starter habits keep a habit you already have', function () {
+      var s = P.emptyState(); P.addHabit(s, P.STARTER_HABITS[0]);
+      eq(P.addStarterHabits(s), 6); eq(s.habits.length, 7);
+    });
+
     /* ---------- Streaks ---------- */
     group('Habit streaks');
     function streakWith(days, today) {

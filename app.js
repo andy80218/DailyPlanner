@@ -219,6 +219,26 @@
     state.habits.push(habit);
     return habit;
   }
+  // A starter set: one habit for each of seven common longevity areas.
+  var STARTER_HABITS = [
+    'Move: exercise or walk 20+ minutes',
+    'Nourish: whole-food meals today',
+    'Sleep: 7+ hours, regular bedtime',
+    'Calm: 5 minutes of breathing or stillness',
+    'Connect: quality time with someone',
+    'Purpose: 15 minutes on meaningful work',
+    'Learn: read or study something new'
+  ];
+  // Adds the starter habits that are not already there. Returns how many were added.
+  function addStarterHabits(state) {
+    var have = {};
+    state.habits.forEach(function (h) { have[h.name.toLowerCase()] = true; });
+    var added = 0;
+    STARTER_HABITS.forEach(function (name) {
+      if (!have[name.toLowerCase()] && addHabit(state, name)) { added += 1; }
+    });
+    return added;
+  }
   function removeHabit(state, id) {
     var before = state.habits.length;
     state.habits = state.habits.filter(function (h) { return h.id !== id; });
@@ -442,6 +462,7 @@
     emptyState: emptyState,
     addTodo: addTodo, toggleTodo: toggleTodo, deleteTodo: deleteTodo, clearDoneTodos: clearDoneTodos,
     getPriorities: getPriorities, setPriorityText: setPriorityText, setPriorityDone: setPriorityDone,
+    STARTER_HABITS: STARTER_HABITS, addStarterHabits: addStarterHabits,
     addHabit: addHabit, removeHabit: removeHabit, isHabitDone: isHabitDone,
     setHabitDone: setHabitDone, currentStreak: currentStreak,
     validateState: validateState, validateImport: validateImport, buildExport: buildExport,
@@ -678,6 +699,12 @@
       var input = $('habit-input');
       if (addHabit(state, input.value)) { input.value = ''; saveNow(); renderHabits(); }
       input.focus();
+    });
+
+    $('btn-starter').addEventListener('click', function () {
+      var n = addStarterHabits(state);
+      saveNow(); renderHabits();
+      say(n + ' starter habits added. Rename or remove any you do not want.');
     });
 
     $('notes').addEventListener('input', function (e) {

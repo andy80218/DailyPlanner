@@ -58,7 +58,10 @@
       <h2 id="h-habits">Habits</h2>
       <p class="hint">Check a habit for the day shown above. The streak counts days in a row up to today.</p>
       <ul id="habit-list" class="list"></ul>
-      <p id="habit-empty" class="empty">No habits yet. Add one below.</p>
+      <div id="habit-empty" class="empty">
+        <p>No habits yet. Add one below, or start with a set of seven.</p>
+        <button type="button" id="btn-starter" class="btn">Add 7 starter habits</button>
+      </div>
       <form id="habit-form" class="add-form">
         <label class="sr-only" for="habit-input">New habit</label>
         <input type="text" id="habit-input" maxlength="80" placeholder="New habit, e.g. Walk 20 minutes" autocomplete="off">

@@ -16,7 +16,7 @@ Use made-up test words like "Test task." Do not type real private things while t
    `https://andy80218.github.io/DailyPlanner/tests.html`
 2. Wait one second.
 
-**Pass:** A **green** box at the top says "All 52 checks passed" and every line below is green and says PASS.
+**Pass:** A **green** box at the top says "All 54 checks passed" and every line below is green and says PASS.
 **Fail:** A **red** box appears. Tap-and-hold, take a screenshot, and show it to Claude Code.
 
 (The number 52 may change later if more checks are added. What matters is that nothing is red.)
@@ -51,6 +51,11 @@ Use made-up test words like "Test task." Do not type real private things while t
 
 **Pass:** The badge now says **2 days**. (Two days in a row, ending today.)
 Then tap the **×** next to the habit. A question appears. Tap OK. **Pass:** the habit is gone.
+
+### 4b. Starter habits
+1. With no habits in the list, tap **Add 7 starter habits**.
+
+**Pass:** Seven habits appear (Move, Nourish, Sleep, Calm, Connect, Purpose, Learn). Tapping the button again later does not make duplicates. You can remove any of them with the **×**.
 
 ### 5. Change the date
 1. Tap the right arrow to go to tomorrow.
