@@ -204,6 +204,38 @@
       eq(P.addStarterHabits(s), 6); eq(s.habits.length, 7);
     });
 
+    test('seven areas, each with a habit and a priority', function () {
+      eq(P.AREAS.length, 7);
+      P.AREAS.forEach(function (a) { ok(a.habit && a.priority, 'missing text'); });
+    });
+    test('old starter habits are renamed, keeping their check marks', function () {
+      var s = P.emptyState(); var h = P.addHabit(s, 'Move: exercise or walk 20+ minutes');
+      P.setHabitDone(s, h.id, '2026-01-01', true);
+      eq(P.addStarterHabits(s), 6); eq(s.habits.length, 7);
+      eq(s.habits[0].name, P.STARTER_HABITS[0]); ok(P.isHabitDone(s, h.id, '2026-01-01'));
+    });
+    test('suggested priorities: 3 per day, same all day, different next day', function () {
+      eq(P.suggestedPriorities('2026-05-05').length, 3);
+      eq(P.suggestedPriorities('2026-05-05'), P.suggestedPriorities('2026-05-05'));
+      ok(P.suggestedPriorities('2026-05-05')[0] !== P.suggestedPriorities('2026-05-06')[0]);
+    });
+    test('all seven areas show up within seven days of suggestions', function () {
+      var seen = {}, d = '2026-05-01', n;
+      for (n = 0; n < 7; n++) { P.suggestedPriorities(d).forEach(function (t) { seen[t] = true; }); d = P.addDays(d, 1); }
+      eq(Object.keys(seen).length, 7);
+    });
+    test('starter priorities fill only empty boxes and never overwrite', function () {
+      var s = P.emptyState(); P.setPriorityText(s, '2026-05-05', 1, 'My own');
+      eq(P.addStarterPriorities(s, '2026-05-05'), 2);
+      var p = P.getPriorities(s, '2026-05-05');
+      eq(p[1].text, 'My own'); ok(p[0].text && p[2].text);
+      eq(P.addStarterPriorities(s, '2026-05-05'), 0);
+    });
+    test('starter priorities are for one day only', function () {
+      var s = P.emptyState(); P.addStarterPriorities(s, '2026-05-05');
+      eq(P.getPriorities(s, '2026-05-06')[0].text, '');
+    });
+
     /* ---------- Streaks ---------- */
     group('Habit streaks');
     function streakWith(days, today) {

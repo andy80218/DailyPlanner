@@ -219,25 +219,57 @@
     state.habits.push(habit);
     return habit;
   }
-  // A starter set: one habit for each of seven common longevity areas.
-  var STARTER_HABITS = [
-    'Move: exercise or walk 20+ minutes',
-    'Nourish: whole-food meals today',
-    'Sleep: 7+ hours, regular bedtime',
-    'Calm: 5 minutes of breathing or stillness',
-    'Connect: quality time with someone',
-    'Purpose: 15 minutes on meaningful work',
+  // The seven Healthspan-360 areas. Each has a daily habit and a priority line.
+  var AREAS = [
+    { habit: 'Physical: move, eat well, sleep enough', priority: 'Physical: move, sleep and nutrition' },
+    { habit: 'Spiritual: purpose, faith or quiet time', priority: 'Spiritual: purpose or faith practice' },
+    { habit: 'Emotional: express love, check in with feelings', priority: 'Emotional: love, feeling, intimacy' },
+    { habit: 'Intellectual: learn or create 15 minutes', priority: 'Intellectual: learn or create something' },
+    { habit: 'Social: connect with family, friends or community', priority: 'Social: partner, family, friends, community' },
+    { habit: 'Environmental: tidy or improve my surroundings', priority: 'Environmental: care for my space and planet' },
+    { habit: 'Financial: one small money or career step', priority: 'Financial: investments, assets, career' }
+  ];
+  var STARTER_HABITS = AREAS.map(function (a) { return a.habit; });
+  // Names used by the first version of the starter set. They are renamed, not duplicated.
+  var OLD_STARTER_HABITS = [
+    'Move: exercise or walk 20+ minutes', 'Nourish: whole-food meals today',
+    'Sleep: 7+ hours, regular bedtime', 'Calm: 5 minutes of breathing or stillness',
+    'Connect: quality time with someone', 'Purpose: 15 minutes on meaningful work',
     'Learn: read or study something new'
   ];
   // Adds the starter habits that are not already there. Returns how many were added.
   function addStarterHabits(state) {
-    var have = {};
-    state.habits.forEach(function (h) { have[h.name.toLowerCase()] = true; });
     var added = 0;
-    STARTER_HABITS.forEach(function (name) {
-      if (!have[name.toLowerCase()] && addHabit(state, name)) { added += 1; }
+    function find(name) {
+      for (var i = 0; i < state.habits.length; i++) {
+        if (state.habits[i].name.toLowerCase() === name.toLowerCase()) { return state.habits[i]; }
+      }
+      return null;
+    }
+    STARTER_HABITS.forEach(function (name, i) {
+      if (find(name)) { return; }
+      var old = find(OLD_STARTER_HABITS[i]);
+      if (old) { old.name = name; return; } // keep its id and check marks
+      if (addHabit(state, name)) { added += 1; }
     });
     return added;
+  }
+
+  // Three of the seven areas for a date; the start moves by 3 each day, so all seven rotate.
+  function suggestedPriorities(key) {
+    var start = (((dayNumber(key) * 3) % 7) + 7) % 7;
+    return [0, 1, 2].map(function (n) { return AREAS[(start + n) % 7].priority; });
+  }
+  // Fills only the EMPTY boxes for that day. Returns how many boxes were filled.
+  function addStarterPriorities(state, key) {
+    if (!isValidDateKey(key)) { return 0; }
+    var list = getPriorities(state, key);
+    var ideas = suggestedPriorities(key);
+    var filled = 0;
+    for (var i = 0; i < PRIORITY_COUNT; i++) {
+      if (!list[i].text) { setPriorityText(state, key, i, ideas[i]); filled += 1; }
+    }
+    return filled;
   }
   function removeHabit(state, id) {
     var before = state.habits.length;
@@ -462,7 +494,8 @@
     emptyState: emptyState,
     addTodo: addTodo, toggleTodo: toggleTodo, deleteTodo: deleteTodo, clearDoneTodos: clearDoneTodos,
     getPriorities: getPriorities, setPriorityText: setPriorityText, setPriorityDone: setPriorityDone,
-    STARTER_HABITS: STARTER_HABITS, addStarterHabits: addStarterHabits,
+    AREAS: AREAS, STARTER_HABITS: STARTER_HABITS, addStarterHabits: addStarterHabits,
+    suggestedPriorities: suggestedPriorities, addStarterPriorities: addStarterPriorities,
     addHabit: addHabit, removeHabit: removeHabit, isHabitDone: isHabitDone,
     setHabitDone: setHabitDone, currentStreak: currentStreak,
     validateState: validateState, validateImport: validateImport, buildExport: buildExport,
@@ -701,10 +734,16 @@
       input.focus();
     });
 
+    $('btn-starter-prio').addEventListener('click', function () {
+      var n = addStarterPriorities(state, viewing);
+      saveNow(); renderPriorities();
+      say(n ? n + ' priorities suggested. Change them any way you like.' : 'All three boxes already have text, so nothing was changed.');
+    });
+
     $('btn-starter').addEventListener('click', function () {
       var n = addStarterHabits(state);
       saveNow(); renderHabits();
-      say(n + ' starter habits added. Rename or remove any you do not want.');
+      say('Starter habits are ready. Rename or remove any you do not want.');
     });
 
     $('notes').addEventListener('input', function (e) {
